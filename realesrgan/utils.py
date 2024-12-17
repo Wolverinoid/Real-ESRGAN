@@ -73,7 +73,7 @@ class RealESRGANer():
         if keyname is not None:
             model.load_state_dict(loadnet[keyname], strict=True)
         else:
-            model.load_state_dict(loadnet, strict=False)
+            model.load_state_dict(loadnet, strict=True)
 
         model.eval()
         self.model = model.to(self.device)
