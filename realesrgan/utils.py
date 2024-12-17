@@ -51,6 +51,8 @@ class RealESRGANer():
         else:
             self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
 
+        print(f"Using device: {self.device}")
+
         if isinstance(model_path, list):
             # dni
             assert len(model_path) == len(dni_weight), 'model_path and dni_weight should have the save length.'
@@ -60,14 +62,18 @@ class RealESRGANer():
             if model_path.startswith('https://'):
                 model_path = load_file_from_url(
                     url=model_path, model_dir=os.path.join(ROOT_DIR, 'weights'), progress=True, file_name=None)
-            loadnet = torch.load(model_path, map_location=torch.device('cpu'))
+            loadnet = torch.load(model_path, map_location=self.device, weights_only=True)
 
+        keyname = None
         # prefer to use params_ema
         if 'params_ema' in loadnet:
             keyname = 'params_ema'
-        else:
+        elif 'params' in loadnet:
             keyname = 'params'
-        model.load_state_dict(loadnet[keyname], strict=True)
+        if keyname is not None:
+            model.load_state_dict(loadnet[keyname], strict=True)
+        else:
+            model.load_state_dict(loadnet, strict=False)
 
         model.eval()
         self.model = model.to(self.device)
